@@ -25,6 +25,11 @@ contract LyLottery is ERC721, ERC721Burnable, Ownable {
         _admin = admin;
     }
 
+    function getTokenNum() public view returns (uint256) {
+        // the number of tokens
+        return ERC721.balanceOf(msg.sender);
+    }
+
     function balanceOf(address owner) public onlyOwner view override returns (uint256) {
         // the number of tokens
         return ERC721.balanceOf(owner);
