@@ -84,7 +84,7 @@ contract LyIssuer is Ownable {
     event FreezeIssue(uint256 indexed _issueNum, uint256 lottorSize, uint256 poolBalance);
     event CloseIssue(uint256 indexed _issueNum);
     event Reward(uint256 indexed _issueNum, uint256 indexed userNFT, uint256 level, uint256 value);
-    event Bet(uint256 indexed userNFT, uint256 num);
+    event Bet(uint256 indexed userNFT, uint256 num, uint256 recommender);
     event DuplicateRandom(uint256 indexed _issueNum, uint256 retry);
 
     constructor(address payable issuerAddr, address payable distAddr, address punterAddr) {
@@ -317,47 +317,54 @@ contract LyIssuer is Ownable {
 
     /* Bet
      * recommender is the distributor
+     * num is the number of lottery
      *
      */
-    function bet(uint256 recommender) external payable {
+    function bet(uint256 recommender, uint256 num) external payable {
         uint256 _issueNum = _issueCounter.current();
         require(_issueStatus[_issueNum] == _STARTED, "NotStarted");
 
         uint256 _value = msg.value;
-        require(_value >= _lotteryPrice, "NotEnoughETH");
+        uint256 _requiredValue = _lotteryPrice * num;
+        require(_value >= _requiredValue, "NotEnoughETH");
+
+        Issue storage curIssue = _issues[_issueNum];
+        uint256 lottorSize = curIssue.records.length;
+        require((num > 0) && (lottorSize + num - 10 < _maxBetNum), "InvalidBetNum");
 
         address _user = msg.sender;
-        (uint256 id, uint256 lid) = _lyLottery.safeMint(_user);
-        Issue storage curIssue = _issues[_issueNum];
-        curIssue.records.push(Lottery({
-            winner: _user,
-            issueNum: _issueNum,
-            rewardLevel: 0,
-            rewardValue: 0,
-            nftId: id,
-            lotteryId: lid
-        }));
-
-        // booking
-        if (_value > _lotteryPrice) {
-            curIssue.extraTreasure += (_value - _lotteryPrice);
+        for (uint bn=0; bn < num; bn++) {
+            (uint256 id, uint256 lid) = _lyLottery.safeMint(_user);
+            curIssue.records.push(Lottery({
+                winner: _user,
+                issueNum: _issueNum,
+                rewardLevel: 0,
+                rewardValue: 0,
+                nftId: id,
+                lotteryId: lid
+            }));
+            
+            emit Bet(id, _issueNum, recommender);
         }
 
-        uint256 _poolBalance = curIssue.balance + _lotteryPrice;
+        // booking
+        if (_value > _requiredValue) {
+            curIssue.extraTreasure += (_value - _requiredValue);
+        }
+
+        uint256 _poolBalance = curIssue.balance + _requiredValue;
         curIssue.balance = _poolBalance;
-
-        emit Bet(id, _issueNum);
-
+        uint256 _bonus = _lottorBonus * num;
         if (recommender == 1 || !_lyLottor.exists(recommender)) {
             // token of _defaultDistributor is 1
-            curIssue.trafficBonus += _lottorBonus;
+            curIssue.trafficBonus += _bonus;
         } else {
-            _lyLottor.record(_issueNum, id, recommender, _lottorBonus);
-            curIssue.distributionBonus += _lottorBonus;
+            _lyLottor.record(_user, _issueNum, recommender, _bonus);
+            curIssue.distributionBonus += _bonus;
         }
 
         // check whether to close this issue
-        uint256 lottorSize = curIssue.records.length;
+        lottorSize = curIssue.records.length;
         if (lottorSize >= _maxBetNum) {
             _issueStatus[_issueNum] = _FREEZED;
             emit FreezeIssue(_issueNum, lottorSize, _poolBalance);
