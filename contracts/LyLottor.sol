@@ -15,7 +15,8 @@ contract LyLottor is Ownable {
     mapping(address => uint256) private _localIds;
     // addresses invited by a distributor
     mapping(uint256 => address[]) private _inviteAddrs;
-    mapping(uint256 => mapping(address => bool)) private _invitedMap;
+    // the map records the punter who is firstly invited by the distributor by token id 
+    mapping(address => uint256) private _invitedMap;
     // balance of each distributor, from tokenId to balance
     mapping(uint256 => uint256) private _distBalance;
     // the cummulative bonus of each distributor
@@ -27,7 +28,7 @@ contract LyLottor is Ownable {
     // the record for each distributor and each issue
     mapping(uint256 => mapping(uint256 => uint256)) private _issueDistRecord;
 
-    event LyLottorRecord(uint256 indexed issueNum, uint256 lotteryId, uint256 indexed tokenId, uint256 bonus);
+    event LyLottorRecord(uint256 indexed issueNum, uint256 indexed tokenId, uint256 bonus);
     event Withdraw(uint256 indexed tokenId, uint256 amount);
     event PayDistributionBonus(uint256 _issueNum, uint256 amount);
 
@@ -72,16 +73,20 @@ contract LyLottor is Ownable {
         return _inviteAddrs[tokenId].length;
     }
 
+    function getInvitedAddress(uint256 tokenId) onlyOwner external view returns (address[] memory) {
+        return _inviteAddrs[tokenId];
+    }
+
     /*
      * record for each sell
+     * _user: who buy a lottery
      * _issueNum: the issue number
-     * _lotteryId: the id of the lottery
      * _tokenId: the tokenId of this distributor
      * _bonus: the bonus of these lottery
      */
     function record(
+        address _user,
         uint256 _issueNum,
-        uint256 _lotteryId,
         uint256 _tokenId,
         uint256 _bonus
     ) external onlyOwner {
@@ -92,10 +97,14 @@ contract LyLottor is Ownable {
         _issueDistRecord[_issueNum][_tokenId] = currBonus + _bonus;
         _distBalance[_tokenId] += _bonus;
         _distCummBonus[_tokenId] += _bonus;
-
         _issueTotalBonus[_issueNum] += _bonus;
 
-        emit LyLottorRecord(_issueNum, _lotteryId, _tokenId, _bonus);
+        if (_invitedMap[_user] == 0) {
+            _invitedMap[_user] = _tokenId;
+            _inviteAddrs[_tokenId].push(_user);
+        }
+
+        emit LyLottorRecord(_issueNum, _tokenId, _bonus);
     }
 
     /* LyIssue transfer distribution fee to LyLottor */
