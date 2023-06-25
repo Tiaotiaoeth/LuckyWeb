@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./LyLottor.sol";
 import "./LyPunter.sol";
 import "./LyLottery.sol";
-import "hardhat/console.sol";
+import "./LyVRFV2.sol";
 
 contract LyIssuer is Ownable {
     //---- How to play
@@ -16,11 +16,11 @@ contract LyIssuer is Ownable {
     // max number of lotteries for each issue
     // uint256 constant public _maxBetNum = 1000;
     // TODO for test
-    uint256 constant public _maxBetNum = 14;
+    uint32 constant public _maxBetNum = 14;
     // the number of top rewards
-    uint256 constant public _topRewardNum = 1;
+    uint32 constant public _topRewardNum = 1;
     // the number of secondary rewards
-    uint256 constant public _secondRewardNum = 10;
+    uint32 constant public _secondRewardNum = 10;
     // the percentage of top reward (50%) to the prize pool in reciprocal
     uint256 constant public _topRewardPctRecip = 2;
 
@@ -31,6 +31,7 @@ contract LyIssuer is Ownable {
     LyLottor immutable private _lyLottor;
     LyPunter immutable private _lyPunter;
     LyLottery immutable private _lyLottery;
+    LyVRFV2 immutable private _lyVrfV2;
     // the address of the issuer
     address payable immutable private _issuer;
     address payable immutable private _defaultDistributor;
@@ -49,6 +50,12 @@ contract LyIssuer is Ownable {
     uint256 constant public _LottorPercent = 10;
     uint256 constant public _TreasuryPercent = 6;
     uint256 constant public _IssuerPercent = 4;
+
+    // chainlink configuration, this is for Arbitrum Georli Testnet
+    address constant public _LinkTokenAddr = 0xd14838A68E8AFBAdE5efb411d5871ea0011AFd28;
+    address constant public _VRFV2WrapperAddr = 0x674Cda1Fef7b3aA28c535693D658B42424bb7dBD;
+    uint32 private _VRFCallbackGasLimit = 400000;
+    uint16 private _VRFRequestConfirmations = 3;
 
     struct Lottery {
         address winner;         // the address of the winner
@@ -71,6 +78,8 @@ contract LyIssuer is Ownable {
 
     // all the issues of lottery
     mapping(uint256 => Issue) private _issues;
+    // issue number to VRF request Ids
+    mapping(uint256 => uint256[]) private issueNumReqIds;
     // status of each issue
     mapping(uint256 => uint256) private _issueStatus;
     // win lotteries by each user
@@ -85,12 +94,12 @@ contract LyIssuer is Ownable {
     event CloseIssue(uint256 indexed _issueNum);
     event Reward(uint256 indexed _issueNum, uint256 indexed userNFT, uint256 level, uint256 value);
     event Bet(uint256 indexed userNFT, uint256 num, uint256 recommender);
-    event DuplicateRandom(uint256 indexed _issueNum, uint256 retry);
 
     constructor(address payable issuerAddr, address payable distAddr, address punterAddr) {
         _lyLottor = new LyLottor(distAddr);
         _lyLottery = LyLottery(punterAddr);
         _lyPunter = new LyPunter(punterAddr);
+        _lyVrfV2 = new LyVRFV2(_LinkTokenAddr, _VRFV2WrapperAddr);
 
         _treasury = payable(msg.sender);
         _issuer = issuerAddr;
@@ -106,6 +115,10 @@ contract LyIssuer is Ownable {
 
     function getLyPunterAddr() public view returns (address) {
         return address(_lyPunter);
+    }
+
+    function getVRFV2Addr() public view returns (address) {
+        return address(_lyVrfV2);
     }
 
     /// lottery management
@@ -162,51 +175,6 @@ contract LyIssuer is Ownable {
         return rewardTotal;
     }
 
-    function getRandomNumbers(uint256 issueNum, uint256 lottorSize, uint256 size) private returns (uint256[] memory) {
-        // retry 3 times
-        for (uint retry = 0; retry < 3; retry++) {
-            console.log('getRandomNumbers', issueNum, size, retry);
-            uint256[] memory nums = new uint256[](size);
-            uint[] memory indices = new uint[](lottorSize);
-            for (uint nonce=0; nonce < size; nonce++) {
-                uint totalSize = lottorSize - nonce;
-                uint randnum = uint(keccak256(abi.encodePacked(nonce, issueNum, lottorSize))) % totalSize;
-                uint index = 0;
-                if (indices[randnum] != 0) {
-                    index = indices[randnum];
-                } else {
-                    index = randnum;
-                }
-
-                if (indices[totalSize - 1] == 0) {
-                    indices[randnum] = totalSize - 1;
-                } else {
-                    indices[randnum] = indices[totalSize - 1];
-                }
-                nums[nonce] = index;
-                console.log(nums[nonce]);
-            }
-            require(nums.length == size, "ErrLinkAPI");
-            // check duplication
-            bool isDup = false;
-            bool[] memory dedup = new bool[](lottorSize);
-            for (uint j = 0; j < size; j++) {
-                console.log('dedup', nums[j], dedup[nums[j]]);
-                if (dedup[nums[j]]) {
-                    isDup = true;
-                    break;
-                }
-                dedup[nums[j]] = true;
-            }
-            console.log('isDep=', isDup);
-            if (!isDup) {
-                return nums;
-            }
-            emit DuplicateRandom(issueNum, retry+1);
-        }
-        require(false, "GetRandomNumError");
-    }
-
     function newIssue() private {
         _issueCounter.increment();
         uint256 issueNum = _issueCounter.current();
@@ -215,19 +183,90 @@ contract LyIssuer is Ownable {
         emit NewIssue(issueNum);
     }
 
-    /* close current issue, liquidate prize pool */
+    function setVRFConfg(uint32 _gasLimit, uint16 _confirms) external onlyOwner {
+        require(_gasLimit >= 300000, 'too small gas limit');
+        require(_confirms > 2, 'ConfirmNums must >= 3');
+
+        _VRFCallbackGasLimit = _gasLimit;
+        _VRFRequestConfirmations = _confirms;
+    }
+
+    /* close current issue, request random number from ChainLink Oracle */
     function closeIssue() external onlyOwner {
         uint256 issueNum = _issueCounter.current();
         require(_issueStatus[issueNum] == _FREEZED, "CannotCloseIssue");
 
-        (uint256 topValue, uint256 secondValue) = _calcPrizeValues(issueNum);
+        uint256[] storage reqIds = issueNumReqIds[issueNum];
+        uint32 size = _topRewardNum + _secondRewardNum;
+        while (size > 10) {
+            uint256 reqId = _lyVrfV2.requestRandomWords(_VRFCallbackGasLimit, _VRFRequestConfirmations, 10);
+            size -= 10;
+            reqIds.push(reqId);
+        }
+        if (size > 0) {
+            uint256 reqId = _lyVrfV2.requestRandomWords(_VRFCallbackGasLimit, _VRFRequestConfirmations, size);
+            reqIds.push(reqId);
+        }
+        _issueStatus[issueNum] = _CLOSED;
+    }
+
+    function checkRandomNumbers(
+        uint256 issueNum, 
+        uint256 lottorSize
+    ) internal view returns (uint256[] memory) {
+        uint256[] storage reqIds = issueNumReqIds[issueNum];
+        require(reqIds.length > 0, 'InvalidVRFRequest');
+
+        // get random numbers from VRF
+        uint32 size = _topRewardNum + _secondRewardNum;
+        uint256[] memory randomNumbers = new uint256[](size);
+        uint index = 0;
+        for (uint i=0; i<reqIds.length; i++) {
+            (, bool fulfilled, uint256[] memory randomWords) = _lyVrfV2.getRequestStatus(reqIds[i]);
+            require(fulfilled, 'VRF request not filled');
+
+            for (uint j=0; j<randomWords.length; j++) {
+                randomNumbers[index] = randomWords[j];
+                index += 1;
+            }
+        }
+        require(index == size, "Error Random Number");
+
+        uint256[] memory nums = new uint256[](size);
+        uint[] memory indices = new uint[](lottorSize);
+        for (uint nonce=0; nonce < size; nonce++) {
+            uint totalSize = lottorSize - nonce;
+            uint randnum = randomNumbers[nonce] % totalSize;
+            index = 0;
+            if (indices[randnum] != 0) {
+                index = indices[randnum];
+            } else {
+                index = randnum;
+            }
+
+            if (indices[totalSize - 1] == 0) {
+                indices[randnum] = totalSize - 1;
+            } else {
+                indices[randnum] = indices[totalSize - 1];
+            }
+            nums[nonce] = index;
+            console.log(nums[nonce]);
+        }
+
+        return randomNumbers;
+    }
+
+    /* liquidate prize pool */
+    function doLottery() external onlyOwner {
+        uint256 issueNum = _issueCounter.current();
+        require(_issueStatus[issueNum] == _CLOSED, "CannotDoLottery");
+
         Issue storage issue = _issues[issueNum];
-        // the number of all lotteries of this issue
-        uint256 lotteryNum = issue.records.length;
+        uint256[] memory randomNumbers = checkRandomNumbers(issueNum, issue.records.length);
+        (uint256 topValue, uint256 secondValue) = _calcPrizeValues(issueNum);
 
         // get random numbers from chainlink
-        uint256[] memory randIndice = getRandomNumbers(issueNum, lotteryNum, _topRewardNum + _secondRewardNum);
-        uint256 rewardTotal = _setWinnerInfo(randIndice, issue, topValue, secondValue);
+        uint256 rewardTotal = _setWinnerInfo(randomNumbers, issue, topValue, secondValue);
 
         // liquidation
         // 1. prize
@@ -257,7 +296,6 @@ contract LyIssuer is Ownable {
         (success, ) = _issuer.call{value: issuerValue}("");
         require(success, "ErrorPayIssuer");
 
-        _issueStatus[issueNum] = _CLOSED;
 
         _lyLottery.reset();
         newIssue();
@@ -330,7 +368,7 @@ contract LyIssuer is Ownable {
 
         Issue storage curIssue = _issues[_issueNum];
         uint256 lottorSize = curIssue.records.length;
-        require((num > 0) && (lottorSize + num - 10 < _maxBetNum), "InvalidBetNum");
+        require(lottorSize + num < _maxBetNum + 10, "InvalidBetNum");
 
         address _user = msg.sender;
         for (uint bn=0; bn < num; bn++) {
