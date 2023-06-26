@@ -253,7 +253,7 @@ contract LyIssuer is Ownable {
             console.log(nums[nonce]);
         }
 
-        return randomNumbers;
+        return nums;
     }
 
     /* liquidate prize pool */
