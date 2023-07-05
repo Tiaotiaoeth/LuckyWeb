@@ -95,13 +95,19 @@ contract LyIssuer is Ownable {
     event Reward(uint256 indexed _issueNum, uint256 indexed userNFT, uint256 level, uint256 value);
     event Bet(uint256 indexed userNFT, uint256 num, uint256 recommender);
 
-    constructor(address payable issuerAddr, address payable distAddr, address punterAddr) {
+    constructor(
+        address payable treasuryAddr,
+        address payable issuerAddr, 
+        address payable distAddr, 
+        address punterAddr
+     ) {
+        // msg.sender is the administrator
         _lyLottor = new LyLottor(distAddr);
         _lyLottery = LyLottery(punterAddr);
         _lyPunter = new LyPunter(punterAddr);
         _lyVrfV2 = new LyVRFV2(_LinkTokenAddr, _VRFV2WrapperAddr);
 
-        _treasury = payable(msg.sender);
+        _treasury = treasuryAddr;
         _issuer = issuerAddr;
         // tokenId = 1 is occupied by the default distributor
         _defaultDistributor = distAddr;
