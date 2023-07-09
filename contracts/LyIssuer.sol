@@ -100,7 +100,7 @@ contract LyIssuer is Ownable {
         address payable issuerAddr, 
         address payable distAddr, 
         address punterAddr
-     ) {
+    ) {
         // msg.sender is the administrator
         _lyLottor = new LyLottor(distAddr);
         _lyLottery = LyLottery(punterAddr);
@@ -140,7 +140,6 @@ contract LyIssuer is Ownable {
         uint256 topValue = poolAfterTax / _topRewardPctRecip;
         // the value of the secondary reward
         uint256 secondValue = (poolAfterTax - topValue) / _secondRewardNum;
-        console.log(_poolBalance, poolAfterTax, topValue, secondValue);
 
         require(topValue + secondValue*_secondRewardNum <= poolAfterTax, "ErrorCalcReward");
         return (topValue, secondValue);
@@ -256,7 +255,6 @@ contract LyIssuer is Ownable {
                 indices[randnum] = indices[totalSize - 1];
             }
             nums[nonce] = index;
-            console.log(nums[nonce]);
         }
 
         return nums;
@@ -325,25 +323,40 @@ contract LyIssuer is Ownable {
         return (_poolBalance, size);
     }
 
-    /* get the latest rewards */
-    function getLatestRewards() external view returns (uint256, uint256[] memory) {
+    /* get the latest rewards: issue number, total bets, winners */
+    function getLatestRewards() external view returns (uint256, uint256, uint256[] memory) {
         uint256 issueNum = _issueCounter.current();
         if (_issueStatus[issueNum] == _CLOSED) {
             Issue storage issue = _issues[issueNum];
-            return (issueNum, issue.rewards);
+            return (issueNum, issue.records.length, issue.rewards);
         } else if (issueNum > 1 && _issueStatus[issueNum-1] == _CLOSED) {
             Issue storage issue = _issues[issueNum-1];
-            return (issueNum-1, issue.rewards);
+            return (issueNum-1, issue.records.length, issue.rewards);
         }
         uint256[] memory emptyLottor;
-        return (0, emptyLottor);
+        return (0, 0, emptyLottor);
     }
 
     /* get rewards by issue number */
-    function getRewards(uint256 issueNum) external view returns (uint256[] memory) {
+    function getRewards(uint256 issueNum) external view returns (uint256, uint256[] memory) {
         require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
 
-        return _issues[issueNum].rewards;
+        Issue storage issue = _issues[issueNum];
+        return (issue.records.length, issue.rewards);
+    }
+
+    /* get lotteries by issue number */
+    function getLotteryNum(uint256 issueNum) external view returns (uint256) {
+        uint256 lotteryNum = 0;
+        address sender = msg.sender;
+        Lottery[] memory records = _issues[issueNum].records;
+        for (uint i = 0; i < records.length; i++) {
+            Lottery memory lot = records[i];
+            if (lot.winner == sender) {
+                lotteryNum += 1;
+            }
+        }
+        return lotteryNum;
     }
 
     /* for status monitor */
