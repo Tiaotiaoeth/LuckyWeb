@@ -53,14 +53,19 @@ contract LyLottor is Ownable {
     }
 
     function getTokenId() public view returns (uint256) {
-        return _localIds[msg.sender];
+        uint256 _tokenId = _localIds[msg.sender];
+        require(_tokenId > 0, "Invalid TokenID");
+
+        return _tokenId;
     }
 
-    function getBalance(uint256 _tokenId) public view returns (uint256) {
+    function getBalance() public view returns (uint256) {
+        uint256 _tokenId = getTokenId();
         return _distBalance[_tokenId];
     }
 
-    function getCummBonus(uint256 _tokenId) public view returns (uint256) {
+    function getCummBonus() public view returns (uint256) {
+        uint256 _tokenId = getTokenId();
         return _distCummBonus[_tokenId];
     }
 
@@ -69,13 +74,33 @@ contract LyLottor is Ownable {
         return _issueTotalBonus[_issueNum];
     }
 
-    function getInvitationNum(uint256 tokenId) external view returns (uint256) {
-        return _inviteAddrs[tokenId].length;
+    function getInvitationNum() external view returns (uint256) {
+        uint256 _tokenId = getTokenId();
+        return _inviteAddrs[_tokenId].length;
     }
 
-    function getInvitedAddress(uint256 tokenId) onlyOwner external view returns (address[] memory) {
-        return _inviteAddrs[tokenId];
+    function getInvitedAddress() 
+        external view returns (address[] memory) 
+    {
+        uint256 _tokenId = getTokenId();
+        return _inviteAddrs[_tokenId];
     }
+
+    function getLottorsWithBonus() 
+        external view returns (uint256[] memory, uint256[] memory)
+    {
+        uint256 maxTokenId = _tokenIdCounter.increment();
+        uint256[] memory tokenIds = new uint256[];
+        uint256[] memory cumBonus = new uint256[];
+        for (uint i = 1; i <= maxTokenId; i++) {
+            uint256 bonus = _distCummBonus[i];
+            if (bonus > 0) {
+                tokenIds.push(i);
+                cumBonus.push(bonus);
+            }
+        }
+        return (tokenIds, cumBonus);
+    } 
 
     /*
      * record for each sell
