@@ -86,21 +86,17 @@ contract LyLottor is Ownable {
         return _inviteAddrs[_tokenId];
     }
 
-    function getLottorsWithBonus() 
-        external view returns (uint256[] memory, uint256[] memory)
+    function getLottorsWithBonus()
+        external view returns (uint256[] memory)
     {
-        uint256 maxTokenId = _tokenIdCounter.increment();
-        uint256[] memory tokenIds = new uint256[];
-        uint256[] memory cumBonus = new uint256[];
-        for (uint i = 1; i <= maxTokenId; i++) {
+        uint256 maxTokenId = _tokenIdCounter.current();
+        uint256[] memory cumBonus = new uint256[](maxTokenId-1);
+        for (uint i = 2; i <= maxTokenId; i++) {
             uint256 bonus = _distCummBonus[i];
-            if (bonus > 0) {
-                tokenIds.push(i);
-                cumBonus.push(bonus);
-            }
+            cumBonus[i-2] = bonus;
         }
-        return (tokenIds, cumBonus);
-    } 
+        return cumBonus;
+    }
 
     /*
      * record for each sell
@@ -133,7 +129,10 @@ contract LyLottor is Ownable {
     }
 
     /* LyIssue transfer distribution fee to LyLottor */
-    function payBonus(uint256 _issueNum, uint256 amount) external payable onlyOwner {
+    function payBonus(
+        uint256 _issueNum, 
+        uint256 amount
+    ) external payable onlyOwner {
         require(amount==msg.value, "ErrorLottorBonus");
         emit PayDistributionBonus(_issueNum, amount);
     }
