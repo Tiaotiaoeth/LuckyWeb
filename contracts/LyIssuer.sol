@@ -432,4 +432,10 @@ contract LyIssuer is Ownable {
     function getPrizesByUser() public view returns (Lottery[] memory) {
         return _rewardByUser[msg.sender];
     }
+
+    function getIssueBaseNftId(uint256 issueNum) public view returns (uint256) {
+        Issue storage curIssue = _issues[issueNum];
+        return curIssue.minLotteryNFTId;
+    }
+
 }
