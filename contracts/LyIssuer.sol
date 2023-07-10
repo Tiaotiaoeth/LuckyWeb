@@ -63,7 +63,6 @@ contract LyIssuer is Ownable {
         uint256 rewardLevel;    // the prize level, 1 for top prize, 2 for secondary prize
         uint256 rewardValue;    // the prize amount
         uint256 nftId;          // the NFT ID of the lottery
-        uint256 lotteryId;      // local lottery ID
     }
 
     struct Issue {
@@ -74,6 +73,7 @@ contract LyIssuer is Ownable {
         uint256 extraTreasure; // extra balance are reserved by the treasure
         uint256 trafficBonus; // self traffic bonus
         uint256 distributionBonus;
+        uint256 minLotteryNFTId; // the minimal nftId of this issue, localNftId = nftId - minLotteryNFTId + 1
     }
 
     // all the issues of lottery
@@ -99,12 +99,12 @@ contract LyIssuer is Ownable {
         address payable treasuryAddr,
         address payable issuerAddr, 
         address payable distAddr, 
-        address punterAddr
+        address lyLotteryAddr
     ) {
         // msg.sender is the administrator
         _lyLottor = new LyLottor(distAddr);
-        _lyLottery = LyLottery(punterAddr);
-        _lyPunter = new LyPunter(punterAddr);
+        _lyLottery = LyLottery(lyLotteryAddr);
+        _lyPunter = new LyPunter(lyLotteryAddr);
         _lyVrfV2 = new LyVRFV2(_LinkTokenAddr, _VRFV2WrapperAddr);
 
         _treasury = treasuryAddr;
@@ -184,6 +184,9 @@ contract LyIssuer is Ownable {
         _issueCounter.increment();
         uint256 issueNum = _issueCounter.current();
         _issueStatus[issueNum] = _STARTED;
+
+        Issue storage issue = _issues[issueNum];
+        issue.minLotteryNFTId = _lyLottery.getMaxTokenId();
 
         emit NewIssue(issueNum);
     }
@@ -300,8 +303,6 @@ contract LyIssuer is Ownable {
         (success, ) = _issuer.call{value: issuerValue}("");
         require(success, "ErrorPayIssuer");
 
-
-        _lyLottery.reset();
         newIssue();
     }
 
@@ -391,14 +392,13 @@ contract LyIssuer is Ownable {
 
         address _user = msg.sender;
         for (uint bn=0; bn < num; bn++) {
-            (uint256 id, uint256 lid) = _lyLottery.safeMint(_user);
+            uint256 id = _lyLottery.safeMint(_user);
             curIssue.records.push(Lottery({
                 winner: _user,
                 issueNum: _issueNum,
                 rewardLevel: 0,
                 rewardValue: 0,
-                nftId: id,
-                lotteryId: lid
+                nftId: id
             }));
             
             emit Bet(id, _issueNum, recommender);
@@ -429,8 +429,7 @@ contract LyIssuer is Ownable {
     }
 
     // get all prizes by the given user
-    function getPrizesByUser(address _user) public view returns (Lottery[] memory) {
-        require(_user == msg.sender, "NotAllowed");
-        return _rewardByUser[_user];
+    function getPrizesByUser() public view returns (Lottery[] memory) {
+        return _rewardByUser[msg.sender];
     }
 }
