@@ -324,6 +324,14 @@ contract LyIssuer is Ownable {
         return (0, 0, emptyLottor);
     }
 
+    /* get records by issue number */
+    function getRecords(uint256 issueNum) external onlyOwner view returns (Lottery[] memory) {
+        require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
+
+        Issue storage issue = _issues[issueNum];
+        return issue.records;
+    }
+
     /* get rewards by issue number */
     function getRewards(uint256 issueNum) external view returns (uint256, uint256[] memory) {
         require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
