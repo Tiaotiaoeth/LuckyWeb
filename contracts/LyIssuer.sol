@@ -412,4 +412,16 @@ contract LyIssuer is Ownable {
         return curIssue.minLotteryNFTId;
     }
 
+    /* get lotteries by issue number */
+    function getLotteryNum(uint256 issueNum) external view returns (uint256) {
+        uint256 lotteryNum = 0;
+        address sender = msg.sender;
+        uint256[] memory rewards = _issues[issueNum].rewards;
+        for (uint i = 0; i < rewards.length; i++) {
+            if (_lyLottery.checkOwnership(sender, rewards[i])) {
+                lotteryNum += 1;
+            }
+        }
+        return lotteryNum;
+    }
 }
