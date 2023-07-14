@@ -140,6 +140,7 @@ contract LyIssuer is Ownable {
     }
 
     function _setWinnerInfo(
+        uint256 issueNum,
         uint256[] memory _randIndice,
         Issue storage _issue,
         uint256 _topValue,
@@ -151,7 +152,7 @@ contract LyIssuer is Ownable {
         _issue.rewards.push(nftId);
 
         uint256 rewardTotal = _topValue;
-        emit Reward(lottery.issueNum, nftId, _TOP_REWARD, _topValue);
+        emit Reward(issueNum, nftId, _TOP_REWARD, _topValue);
 
         // randomly select secondary winner
         for(uint i = 1; i < _secondRewardNum+1; i++) {
@@ -161,7 +162,7 @@ contract LyIssuer is Ownable {
             _issue.rewards.push(nftId);
 
             rewardTotal += _secondValue;
-            emit Reward(lottery.issueNum, nftId, _SECOND_REWARD, _secondValue);
+            emit Reward(issueNum, nftId, _SECOND_REWARD, _secondValue);
         }
         return rewardTotal;
     }
@@ -259,7 +260,7 @@ contract LyIssuer is Ownable {
         (uint256 topValue, uint256 secondValue) = _calcPrizeValues(issueNum);
 
         // get random numbers from chainlink
-        uint256 rewardTotal = _setWinnerInfo(randomNumbers, issue, topValue, secondValue);
+        uint256 rewardTotal = _setWinnerInfo(issueNum, randomNumbers, issue, topValue, secondValue);
 
         // liquidation
         // 1. prize
