@@ -27,11 +27,11 @@ contract LyLottery is ERC721, Ownable {
         return ERC721.balanceOf(msg.sender);
     }
 
-    function balanceOf(address owner) public onlyOwner view override returns (uint256) {
+    function balanceOf(address owner) public view override returns (uint256) {
         return ERC721.balanceOf(owner);
     }
 
-    function ownerOf(uint256 tokenId) public onlyOwner view override returns (address) {
+    function ownerOf(uint256 tokenId) public view override returns (address) {
         address theOwner = _ownerOf(tokenId);
         require(theOwner != address(0), "ERC721: invalid token ID");
         return theOwner;
