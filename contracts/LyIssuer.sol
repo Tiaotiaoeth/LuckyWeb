@@ -58,10 +58,7 @@ contract LyIssuer is Ownable {
     uint16 private _VRFRequestConfirmations = 3;
 
     struct Lottery {
-        address winner;         // the address of the winner
-        uint256 issueNum;       // the issue number
-        uint256 rewardLevel;    // the prize level, 1 for top prize, 2 for secondary prize
-        uint256 rewardValue;    // the prize amount
+        address buyer;          // the address of original buyer
         uint256 nftId;          // the NFT ID of the lottery
     }
 
@@ -69,7 +66,6 @@ contract LyIssuer is Ownable {
         uint256 balance;   // the balance of the prize pool
         Lottery[] records; // lotteries
         uint256[] rewards; // the NFT ID of winners
-        mapping(uint256 => uint256) redeemable; // the prize value for each win lottery by id
         uint256 extraTreasure; // extra balance are reserved by the treasure
         uint256 trafficBonus; // self traffic bonus
         uint256 distributionBonus;
@@ -82,8 +78,6 @@ contract LyIssuer is Ownable {
     mapping(uint256 => uint256[]) private issueNumReqIds;
     // status of each issue
     mapping(uint256 => uint256) private _issueStatus;
-    // win lotteries by each user
-    mapping(address => Lottery[]) private _rewardByUser;
 
     using Counters for Counters.Counter;
     // issue number starts at one
@@ -152,13 +146,9 @@ contract LyIssuer is Ownable {
         uint256 _secondValue
     ) private returns (uint256) {
         Lottery storage lottery = _issue.records[_randIndice[0]];
-        lottery.rewardLevel = _TOP_REWARD;
-        lottery.rewardValue = _topValue;
 
         uint256 nftId = lottery.nftId;
-        _issue.redeemable[nftId] = _topValue;
         _issue.rewards.push(nftId);
-        _rewardByUser[lottery.winner].push(lottery);
 
         uint256 rewardTotal = _topValue;
         emit Reward(lottery.issueNum, nftId, _TOP_REWARD, _topValue);
@@ -166,13 +156,9 @@ contract LyIssuer is Ownable {
         // randomly select secondary winner
         for(uint i = 1; i < _secondRewardNum+1; i++) {
             lottery = _issue.records[_randIndice[i]];
-            lottery.rewardLevel = _SECOND_REWARD;
-            lottery.rewardValue = _secondValue;
 
             nftId = lottery.nftId;
-            _issue.redeemable[nftId] = _secondValue;
             _issue.rewards.push(nftId);
-            _rewardByUser[lottery.winner].push(lottery);
 
             rewardTotal += _secondValue;
             emit Reward(lottery.issueNum, nftId, _SECOND_REWARD, _secondValue);
@@ -346,19 +332,6 @@ contract LyIssuer is Ownable {
         return (issue.records.length, issue.rewards);
     }
 
-    /* get lotteries by issue number */
-    function getLotteryNum(uint256 issueNum) external view returns (uint256) {
-        uint256 lotteryNum = 0;
-        address sender = msg.sender;
-        Lottery[] memory records = _issues[issueNum].records;
-        for (uint i = 0; i < records.length; i++) {
-            Lottery memory lot = records[i];
-            if (lot.winner == sender) {
-                lotteryNum += 1;
-            }
-        }
-        return lotteryNum;
-    }
 
     /* for status monitor */
     function getIssueStatus() external view onlyOwner returns (uint256) {
@@ -394,10 +367,7 @@ contract LyIssuer is Ownable {
         for (uint bn=0; bn < num; bn++) {
             uint256 id = _lyLottery.safeMint(_user);
             curIssue.records.push(Lottery({
-                winner: _user,
-                issueNum: _issueNum,
-                rewardLevel: 0,
-                rewardValue: 0,
+                buyer: _user,
                 nftId: id
             }));
             
@@ -426,11 +396,6 @@ contract LyIssuer is Ownable {
             _issueStatus[_issueNum] = _FREEZED;
             emit FreezeIssue(_issueNum, lottorSize, _poolBalance);
         }
-    }
-
-    // get all prizes by the given user
-    function getPrizesByUser() public view returns (Lottery[] memory) {
-        return _rewardByUser[msg.sender];
     }
 
     function getIssueBaseNftId(uint256 issueNum) public view returns (uint256) {
