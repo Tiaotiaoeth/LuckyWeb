@@ -14,13 +14,11 @@ contract LyIssuer is Ownable {
     uint256 constant public _lotteryPrice = 1000000 gwei;
     uint256 constant public _lottorBonus  = 100000 gwei;
     // max number of lotteries for each issue
-    // uint256 constant public _maxBetNum = 1000;
-    // TODO for test
-    uint32 constant public _maxBetNum = 14;
+    uint256 constant public _maxBetNum = 1000;
     // the number of top rewards
     uint32 constant public _topRewardNum = 1;
     // the number of secondary rewards
-    uint32 constant public _secondRewardNum = 10;
+    uint32 constant public _secondRewardNum = 25;
     // the percentage of top reward (50%) to the prize pool in reciprocal
     uint256 constant public _topRewardPctRecip = 2;
 
@@ -334,11 +332,11 @@ contract LyIssuer is Ownable {
     }
 
     /* get rewards by issue number */
-    function getRewards(uint256 issueNum) external view returns (uint256, uint256[] memory) {
+    function getRewards(uint256 issueNum) external view returns (uint256, uint256, uint256[] memory) {
         require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
 
         Issue storage issue = _issues[issueNum];
-        return (issue.records.length, issue.rewards);
+        return (issueNum, issue.records.length, issue.rewards);
     }
 
 
@@ -412,7 +410,7 @@ contract LyIssuer is Ownable {
         return curIssue.minLotteryNFTId;
     }
 
-    /* get lotteries by issue number */
+    /* get lotteries by issue number of user */
     function getLotteryNum(uint256 issueNum) external view returns (uint256) {
         uint256 lotteryNum = 0;
         address sender = msg.sender;
