@@ -291,9 +291,9 @@
 		"name": "_maxBetNum",
 		"outputs": [
 			{
-				"internalType": "uint32",
+				"internalType": "uint256",
 				"name": "",
-				"type": "uint32"
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -535,30 +535,21 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "getPrizesByUser",
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "issueNum",
+				"type": "uint256"
+			}
+		],
+		"name": "getRecords",
 		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "address",
-						"name": "winner",
+						"name": "buyer",
 						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "issueNum",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "rewardLevel",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "rewardValue",
-						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
@@ -584,6 +575,11 @@
 		],
 		"name": "getRewards",
 		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
 			{
 				"internalType": "uint256",
 				"name": "",
