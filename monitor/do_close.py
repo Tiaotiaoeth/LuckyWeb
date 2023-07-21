@@ -22,7 +22,7 @@ def main():
     admin_balance = balance_from = w3.from_wei(w3.eth.get_balance(admin_addr), 'ether')
     print('admin balance: ', admin_balance)
 
-    lyissue_addr = '0x991C0B6f062cC1f3d499F983444B91F49D1Bf966'
+    lyissue_addr = '0x15C43143f42e0994Bf7736d91770Ddb506496D51'
     lyissue_abi = open('./monitor/LyIssuer.ABI').read()
     lyissue = w3.eth.contract(address=lyissue_addr, abi=lyissue_abi)
     issue_num = lyissue.functions.getIssueNum().call()
