@@ -70,6 +70,11 @@ contract LyIssuer is Ownable {
         uint256 minLotteryNFTId; // the minimal nftId of this issue, localNftId = nftId - minLotteryNFTId + 1
     }
 
+    struct ReducedIssue {
+        uint256 issueNum;
+        uint256[] rewards;
+    }
+
     // all the issues of lottery
     mapping(uint256 => Issue) private _issues;
     // issue number to VRF request Ids
@@ -319,12 +324,14 @@ contract LyIssuer is Ownable {
             Issue storage issue = _issues[issueNum-1];
             return (issueNum-1, issue.records.length, issue.rewards);
         }
-        uint256[] memory emptyLottor;
+        uint256[] memory emptyLottor = new uint256[](0);
         return (0, 0, emptyLottor);
     }
 
     /* get records by issue number */
-    function getRecords(uint256 issueNum) external onlyOwner view returns (Lottery[] memory) {
+    function getRecords(
+        uint256 issueNum
+    ) external onlyOwner view returns (Lottery[] memory) {
         require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
 
         Issue storage issue = _issues[issueNum];
@@ -332,11 +339,31 @@ contract LyIssuer is Ownable {
     }
 
     /* get rewards by issue number */
-    function getRewards(uint256 issueNum) external view returns (uint256, uint256, uint256[] memory) {
+    function getRewards(
+        uint256 issueNum
+    ) external view returns (uint256, uint256, uint256[] memory) {
         require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
 
         Issue storage issue = _issues[issueNum];
         return (issueNum, issue.records.length, issue.rewards);
+    }
+
+    function getBatchRewards(
+        uint256[] memory issueNums
+    ) external view returns (ReducedIssue[] memory) {
+        uint size = issueNums.length;
+        ReducedIssue[] memory groupRewards = new ReducedIssue[](size);
+
+        for (uint i = 0; i < size; i++) {
+            uint256 issueNum = issueNums[i];
+            require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
+
+            Issue storage issue = _issues[issueNum];
+            groupRewards[i].issueNum = issueNum;
+            groupRewards[i].rewards = issue.rewards;
+        }
+
+        return groupRewards;
     }
 
 
