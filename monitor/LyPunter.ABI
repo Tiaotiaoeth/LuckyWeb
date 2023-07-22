@@ -79,31 +79,14 @@
 		"name": "getPrizesByUser",
 		"outputs": [
 			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "issueNum",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "rewardLevel",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "rewardValue",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "nftId",
-						"type": "uint256"
-					}
-				],
-				"internalType": "struct LyPunter.Prize[]",
+				"internalType": "uint256[]",
 				"name": "",
-				"type": "tuple[]"
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
 			},
 			{
 				"internalType": "uint256[]",
