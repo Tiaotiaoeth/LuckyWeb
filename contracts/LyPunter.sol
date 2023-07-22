@@ -115,47 +115,44 @@ contract LyPunter is Ownable {
     }
 
     function getCummPrizeByUser() public view returns (uint256) {
-        address user = msg.sender;
-        return _cumPrizeByUser[user];
+        return _cumPrizeByUser[msg.sender];
     }
 
     // return the prize redeemable by the msg.sender
     function getBalanceByUser() public view returns (uint256)
     {
-        address user = msg.sender;
-        uint256 totalPrize = 0;
+        address _user = msg.sender;
+        uint256 _totalPrize = 0;
 
-        uint start = _startIdx;
-        uint unredeemSize = _unredeemPrize.length - start;
-        for (uint i = start; i < start + unredeemSize; i++) {
+        for (uint i = _startIdx; i < _unredeemPrize.length; i++) {
             uint256 nftId = _unredeemPrize[i];
-            if (_lottery.checkOwnership(user, nftId)) {
-                totalPrize += _prizes[nftId].rewardValue;
+            if (_lottery.checkOwnership(_user, nftId)) {
+                _totalPrize += _prizes[nftId].rewardValue;
             }
         }
-        return totalPrize;
+        return _totalPrize;
     }
 
     function getPrizesByUser() 
         public 
         view 
-        returns (Prize[] memory, uint256[] memory)
+        returns (uint256[] memory, uint256[] memory, uint256[] memory)
     {
         address user = msg.sender;
         uint size = _allPrizes.length;
 
-        uint256[] memory myPrizes = new uint256[](size);
+        bool[] memory isMyPrizes = new bool[](size);
         uint validPrizeNum = 0;
         bool[] memory isIssueNums = new bool[](_maxIssueNum);
         uint issueSize = 0;
         for (uint i = 0; i < size; i++) {
             uint256 nftId = _allPrizes[i];
             if (_lottery.checkOwnership(user, nftId)) {
-                myPrizes[validPrizeNum] = nftId;
+                isMyPrizes[i] = true;
                 validPrizeNum++;
 
-                uint256 issueNum = _prizes[nftId].issueNum - 1;
                 // dedup
+                uint256 issueNum = _prizes[nftId].issueNum - 1;
                 if (!isIssueNums[issueNum]) {
                     isIssueNums[issueNum] = true;
                     issueSize++;
@@ -164,20 +161,27 @@ contract LyPunter is Ownable {
         }
 
         // collect prizes by the user
-        Prize[] memory myValidPrizes = new Prize[](validPrizeNum);
-        for (uint i = 0; i < validPrizeNum; i++) {
-            myValidPrizes[i] = _prizes[myPrizes[i]];
-        }
-
-        // collect issue numbers this user won
-        uint256[] memory issueNums = new uint256[](issueSize);
+        uint256[] memory prizeIds = new uint256[](validPrizeNum);
+        uint256[] memory issueNums = new uint256[](validPrizeNum);
         uint idx = 0;
-        for (uint i=0; i<isIssueNums.length; i++) {
-            if (isIssueNums[i]) {
-                issueNums[idx] = i+1;
+        for (uint i = 0; i < size; i++) {
+            if (isMyPrizes[i]) {
+                uint256 nftId = _allPrizes[i];
+                prizeIds[idx] = nftId;
+                issueNums[idx] = _prizes[nftId].issueNum;
                 idx++;
             }
         }
-        return (myValidPrizes, issueNums);
+
+        // collect issue numbers this user won
+        uint256[] memory isoIssueNums = new uint256[](issueSize);
+        idx = 0;
+        for (uint i=0; i<isIssueNums.length; i++) {
+            if (isIssueNums[i]) {
+                isoIssueNums[idx] = i+1;
+                idx++;
+            }
+        }
+        return (prizeIds, issueNums, isoIssueNums);
     }
 }
