@@ -18,16 +18,16 @@ def main():
 
     w3 = Web3(Web3.HTTPProvider('https://goerli-rollup.arbitrum.io/rpc'))
 
-    admin_addr = "0x8cE50606048e70051da10dFaAc45d6f4C4cCe683"
+    admin_addr = ""
     admin_balance = balance_from = w3.from_wei(w3.eth.get_balance(admin_addr), 'ether')
     print('admin balance: ', admin_balance)
 
-    lyissue_addr = '0x15C43143f42e0994Bf7736d91770Ddb506496D51'
+    lyissue_addr = ''
     lyissue_abi = open('./monitor/LyIssuer.ABI').read()
     lyissue = w3.eth.contract(address=lyissue_addr, abi=lyissue_abi)
     issue_num = lyissue.functions.getIssueNum().call()
 
-    pk = "6a80227400cc48ff81f096f4bde0a763e4dd4afc9a3a5f8fc1e6d17d5c53314a"
+    pk = ""
 
     status_code = lyissue.functions.getIssueStatus().call(
         {
