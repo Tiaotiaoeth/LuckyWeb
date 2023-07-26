@@ -72,6 +72,7 @@ contract LyIssuer is Ownable {
 
     struct ReducedIssue {
         uint256 issueNum;
+        uint256 size;
         uint256[] rewards;
     }
 
@@ -360,6 +361,7 @@ contract LyIssuer is Ownable {
 
             Issue storage issue = _issues[issueNum];
             groupRewards[i].issueNum = issueNum;
+            groupRewards[i].size = issue.records.length;
             groupRewards[i].rewards = issue.rewards;
         }
 
