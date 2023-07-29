@@ -11,6 +11,10 @@ contract LyLottor is Ownable {
 
     Counters.Counter private _tokenIdCounter;
 
+    struct IssueStatus {
+        bool payed;         // whether payed by LyIssuer
+        uint256 totalBonus; // total bonus of this issue
+    }
     // address to local tokenId
     mapping(address => uint256) private _localIds;
     // addresses invited by a distributor
@@ -24,7 +28,7 @@ contract LyLottor is Ownable {
     // the tokenids of distributors for each issue
     mapping(uint256 => uint256[]) private _issueDists;
     // the total bonus of all distributors for each issue
-    mapping(uint256 => uint256) private _issueTotalBonus;
+    mapping(uint256 => IssueStatus) private _issueTotalBonus;
     // the record for each distributor and each issue
     mapping(uint256 => mapping(uint256 => uint256)) private _issueDistRecord;
 
@@ -70,8 +74,10 @@ contract LyLottor is Ownable {
     }
 
     // the total bonus of all distributors by the issue
-    function getTotalBonus(uint256 _issueNum) external view returns (uint256) {
-        return _issueTotalBonus[_issueNum];
+    function getTotalBonus(
+        uint256 _issueNum
+    ) external view returns (uint256) {
+        return _issueTotalBonus[_issueNum].totalBonus;
     }
 
     function getInvitationNum() external view returns (uint256) {
@@ -116,9 +122,7 @@ contract LyLottor is Ownable {
             _issueDists[_issueNum].push(_tokenId);
         }
         _issueDistRecord[_issueNum][_tokenId] = currBonus + _bonus;
-        _distBalance[_tokenId] += _bonus;
-        _distCummBonus[_tokenId] += _bonus;
-        _issueTotalBonus[_issueNum] += _bonus;
+        _issueTotalBonus[_issueNum].totalBonus += _bonus;
 
         if (_invitedMap[_user] == 0) {
             _invitedMap[_user] = _tokenId;
@@ -134,16 +138,30 @@ contract LyLottor is Ownable {
         uint256 amount
     ) external payable onlyOwner {
         require(amount==msg.value, "ErrorLottorBonus");
+
+        IssueStatus memory istatus = _issueTotalBonus[_issueNum];
+        require(!istatus.payed, "IssueLottorBonusPayedYet.");
+
+        istatus.payed = true;
+        uint256[] memory dists = _issueDists[_issueNum];
+        for (uint i = 0; i < dists.length; i++) {
+            uint256 distId = dists[i];
+            _distBalance[distId] += _issueDistRecord[_issueNum][distId];
+        }
+
         emit PayDistributionBonus(_issueNum, amount);
     }
 
-    function withdraw(uint256 amount) external {
+    function withdraw() external {
         address _user = msg.sender;
         uint256 tokenId = _localIds[_user];
         require(tokenId > 0, "NotPermitted.");
-        require(_distBalance[tokenId] >= amount, "NotEnough");
 
-        _distBalance[tokenId] -= amount;
+        uint256 amount = _distBalance[tokenId];
+        require(amount > 0, "NotEnough");
+
+        _distBalance[tokenId] = 0;
+        _distCummBonus[tokenId] += amount;
         (bool success, ) = _user.call{value: amount}("");
         require(success, "WithdrawFailed");
 
