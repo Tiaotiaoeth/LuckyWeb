@@ -409,6 +409,11 @@
 						"internalType": "uint256[]",
 						"name": "rewards",
 						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "localids",
+						"type": "uint256[]"
 					}
 				],
 				"internalType": "struct LyIssuer.ReducedIssue[]",
@@ -468,6 +473,11 @@
 		"inputs": [],
 		"name": "getLatestRewards",
 		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
 			{
 				"internalType": "uint256",
 				"name": "",
@@ -543,6 +553,11 @@
 		"name": "getRecords",
 		"outputs": [
 			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
 				"components": [
 					{
 						"internalType": "address",
@@ -573,6 +588,11 @@
 		],
 		"name": "getRewards",
 		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
 			{
 				"internalType": "uint256",
 				"name": "",
