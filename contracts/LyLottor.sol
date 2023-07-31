@@ -146,7 +146,9 @@ contract LyLottor is Ownable {
         uint256[] memory dists = _issueDists[_issueNum];
         for (uint i = 0; i < dists.length; i++) {
             uint256 distId = dists[i];
-            _distBalance[distId] += _issueDistRecord[_issueNum][distId];
+            uint256 amount = _issueDistRecord[_issueNum][distId];
+            _distBalance[distId] += amount;
+            _distCummBonus[tokenId] += amount;
         }
 
         emit PayDistributionBonus(_issueNum, amount);
@@ -161,7 +163,6 @@ contract LyLottor is Ownable {
         require(amount > 0, "NotEnough");
 
         _distBalance[tokenId] = 0;
-        _distCummBonus[tokenId] += amount;
         (bool success, ) = _user.call{value: amount}("");
         require(success, "WithdrawFailed");
 
