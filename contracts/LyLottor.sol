@@ -146,9 +146,9 @@ contract LyLottor is Ownable {
         uint256[] memory dists = _issueDists[_issueNum];
         for (uint i = 0; i < dists.length; i++) {
             uint256 distId = dists[i];
-            uint256 amount = _issueDistRecord[_issueNum][distId];
-            _distBalance[distId] += amount;
-            _distCummBonus[tokenId] += amount;
+            uint256 value = _issueDistRecord[_issueNum][distId];
+            _distBalance[distId] += value;
+            _distCummBonus[distId] += value;
         }
 
         emit PayDistributionBonus(_issueNum, amount);
