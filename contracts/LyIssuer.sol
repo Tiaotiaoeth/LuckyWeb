@@ -74,6 +74,7 @@ contract LyIssuer is Ownable {
         uint256 issueNum;
         uint256 size;
         uint256[] rewards;
+        uint256[] localids;
     }
 
     // all the issues of lottery
@@ -82,6 +83,9 @@ contract LyIssuer is Ownable {
     mapping(uint256 => uint256[]) private issueNumReqIds;
     // status of each issue
     mapping(uint256 => uint256) private _issueStatus;
+    // for each issue, one address only one bet
+    bool private _flagOneAddrOneBet;
+    mapping(address => uint256) private _userMaxIssue;
 
     using Counters for Counters.Counter;
     // issue number starts at one
@@ -109,6 +113,7 @@ contract LyIssuer is Ownable {
         _issuer = issuerAddr;
         // tokenId = 1 is occupied by the default distributor
         _defaultDistributor = distAddr;
+        _flagOneAddrOneBet = false;
 
         newIssue();
     }
@@ -126,6 +131,19 @@ contract LyIssuer is Ownable {
     }
 
     /// lottery management
+
+    function setFlagOneAddrOneBet(bool flag) external onlyOwner {
+        _flagOneAddrOneBet = flag;
+    }
+
+    function _checkFlagOneAddrOneBet(address user, uint256 issueNum) internal returns (bool) {
+        uint256 theMaxIssueNum = _userMaxIssue[user];
+        if (theMaxIssueNum >= issueNum) {
+            return false;
+        }
+        _userMaxIssue[user] = issueNum;
+        return true;
+    }
 
     // calculate top and secondary prizes
     function _calcPrizeValues(uint256 issueNum) private view returns (uint256, uint256) {
@@ -316,37 +334,39 @@ contract LyIssuer is Ownable {
     }
 
     /* get the latest rewards: issue number, total bets, winners */
-    function getLatestRewards() external view returns (uint256, uint256, uint256[] memory) {
+    function getLatestRewards() 
+        external view returns (uint256, uint256, uint256, uint256[] memory) 
+    {
         uint256 issueNum = _issueCounter.current();
         if (_issueStatus[issueNum] == _CLOSED) {
             Issue storage issue = _issues[issueNum];
-            return (issueNum, issue.records.length, issue.rewards);
+            return (issueNum, issue.records.length, issue.minLotteryNFTId, issue.rewards);
         } else if (issueNum > 1 && _issueStatus[issueNum-1] == _CLOSED) {
             Issue storage issue = _issues[issueNum-1];
-            return (issueNum-1, issue.records.length, issue.rewards);
+            return (issueNum-1, issue.records.length, issue.minLotteryNFTId, issue.rewards);
         }
         uint256[] memory emptyLottor = new uint256[](0);
-        return (0, 0, emptyLottor);
+        return (0, 0, 0, emptyLottor);
     }
 
     /* get records by issue number */
     function getRecords(
         uint256 issueNum
-    ) external onlyOwner view returns (Lottery[] memory) {
+    ) external onlyOwner view returns (uint256, Lottery[] memory) {
         require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
 
         Issue storage issue = _issues[issueNum];
-        return issue.records;
+        return (issue.minLotteryNFTId, issue.records);
     }
 
     /* get rewards by issue number */
     function getRewards(
         uint256 issueNum
-    ) external view returns (uint256, uint256, uint256[] memory) {
+    ) external view returns (uint256, uint256, uint256, uint256[] memory) {
         require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
 
         Issue storage issue = _issues[issueNum];
-        return (issueNum, issue.records.length, issue.rewards);
+        return (issueNum, issue.records.length, issue.minLotteryNFTId, issue.rewards);
     }
 
     function getBatchRewards(
@@ -363,6 +383,13 @@ contract LyIssuer is Ownable {
             groupRewards[i].issueNum = issueNum;
             groupRewards[i].size = issue.records.length;
             groupRewards[i].rewards = issue.rewards;
+
+            uint256[] memory localids =  new uint256[](issue.rewards.length);
+            uint256 baseId = issue.minLotteryNFTId;
+            for (uint j = 0; j < issue.rewards.length; j++) {
+                localids[j] = issue.rewards[j] - baseId + 1;
+            }
+            groupRewards[i].localids = localids;
         }
 
         return groupRewards;
@@ -395,11 +422,16 @@ contract LyIssuer is Ownable {
         uint256 _requiredValue = _lotteryPrice * num;
         require(_value >= _requiredValue, "NotEnoughETH");
 
+        address _user = msg.sender;
+        if (_flagOneAddrOneBet) {
+            require(_checkFlagOneAddrOneBet(_user, _issueNum), "AlreadyBetThisIssue");
+            require(num == 1, "NoMoreThanOneBet");
+        }
+
         Issue storage curIssue = _issues[_issueNum];
         uint256 lottorSize = curIssue.records.length;
         require(lottorSize + num < _maxBetNum + 10, "InvalidBetNum");
 
-        address _user = msg.sender;
         for (uint bn=0; bn < num; bn++) {
             uint256 id = _lyLottery.safeMint(_user);
             curIssue.records.push(Lottery({
