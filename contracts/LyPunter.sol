@@ -24,8 +24,7 @@ contract LyPunter is Ownable {
     mapping(address => uint256) private _cumPrizeByUser;
     // un-redeemed prizes' nftid
     uint256[] private _unredeemPrize;
-    // all prizes' nftid
-    uint256[] private _allPrizes;
+
     // start index of unredeemed prize array, make un-redeemed prized compact
     uint private _startIdx;
     uint256 private _maxIssueNum;
@@ -51,7 +50,6 @@ contract LyPunter is Ownable {
         for (uint i = 0; i < ids.length; i++) {
             Prize storage aPrize = _prizes[ids[i]];
             require(aPrize.issueNum == 0, 'SetRewardYet!');
-            _allPrizes.push(ids[i]);
 
             aPrize.issueNum = issueNum;
             aPrize.nftId = ids[i];
@@ -91,6 +89,7 @@ contract LyPunter is Ownable {
         uint start = _startIdx;
         uint size = _unredeemPrize.length;
         uint256 totalPrizeValue = 0;
+        // scan un-redeemed prize compact array
         for (uint i = start; i < size; i++) {
             uint256 nftId = _unredeemPrize[i];
             if (_lottery.checkOwnership(user, nftId)) {
@@ -123,7 +122,7 @@ contract LyPunter is Ownable {
     {
         address _user = msg.sender;
         uint256 _totalPrize = 0;
-
+        // scan un-redeemed prize compact array
         for (uint i = _startIdx; i < _unredeemPrize.length; i++) {
             uint256 nftId = _unredeemPrize[i];
             if (_lottery.checkOwnership(_user, nftId)) {
@@ -131,57 +130,5 @@ contract LyPunter is Ownable {
             }
         }
         return _totalPrize;
-    }
-
-    function getPrizesByUser() 
-        public 
-        view 
-        returns (uint256[] memory, uint256[] memory, uint256[] memory)
-    {
-        address user = msg.sender;
-        uint size = _allPrizes.length;
-
-        bool[] memory isMyPrizes = new bool[](size);
-        uint validPrizeNum = 0;
-        bool[] memory isIssueNums = new bool[](_maxIssueNum);
-        uint issueSize = 0;
-        for (uint i = 0; i < size; i++) {
-            uint256 nftId = _allPrizes[i];
-            if (_lottery.checkOwnership(user, nftId)) {
-                isMyPrizes[i] = true;
-                validPrizeNum++;
-
-                // dedup
-                uint256 issueNum = _prizes[nftId].issueNum - 1;
-                if (!isIssueNums[issueNum]) {
-                    isIssueNums[issueNum] = true;
-                    issueSize++;
-                }
-            }
-        }
-
-        // collect prizes by the user
-        uint256[] memory prizeIds = new uint256[](validPrizeNum);
-        uint256[] memory issueNums = new uint256[](validPrizeNum);
-        uint idx = 0;
-        for (uint i = 0; i < size; i++) {
-            if (isMyPrizes[i]) {
-                uint256 nftId = _allPrizes[i];
-                prizeIds[idx] = nftId;
-                issueNums[idx] = _prizes[nftId].issueNum;
-                idx++;
-            }
-        }
-
-        // collect issue numbers this user won
-        uint256[] memory isoIssueNums = new uint256[](issueSize);
-        idx = 0;
-        for (uint i=0; i<isIssueNums.length; i++) {
-            if (isIssueNums[i]) {
-                isoIssueNums[idx] = i+1;
-                idx++;
-            }
-        }
-        return (prizeIds, issueNums, isoIssueNums);
     }
 }
