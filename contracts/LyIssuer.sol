@@ -68,13 +68,16 @@ contract LyIssuer is Ownable {
         uint256 trafficBonus; // self traffic bonus
         uint256 distributionBonus;
         uint256 minLotteryNFTId; // the minimal nftId of this issue, localNftId = nftId - minLotteryNFTId + 1
+        uint256 blockNumber;
     }
 
-    struct ReducedIssue {
+    struct AdvancedRecord {
         uint256 issueNum;
         uint256 size;
-        uint256[] rewards;
         uint256[] localids;
+        uint256[] userRewardLocalIds;
+        uint256[] userTickets;
+        uint256[] userTicketLocalIds;
     }
 
     // all the issues of lottery
@@ -86,6 +89,8 @@ contract LyIssuer is Ownable {
     // for each issue, one address only one bet
     bool private _flagOneAddrOneBet;
     mapping(address => uint256) private _userMaxIssue;
+    // user-based all tickets, issue number => user address => ticket ids
+    mapping(uint256 => mapping(address => uint256[])) _userAllTickets;
 
     using Counters for Counters.Counter;
     // issue number starts at one
@@ -196,6 +201,7 @@ contract LyIssuer is Ownable {
 
         Issue storage issue = _issues[issueNum];
         issue.minLotteryNFTId = _lyLottery.getMaxTokenId();
+        issue.blockNumber = block.number;
 
         emit NewIssue(issueNum);
     }
@@ -369,27 +375,69 @@ contract LyIssuer is Ownable {
         return (issueNum, issue.records.length, issue.minLotteryNFTId, issue.rewards);
     }
 
-    function getBatchRewards(
-        uint256[] memory issueNums
-    ) external view returns (ReducedIssue[] memory) {
-        uint size = issueNums.length;
-        ReducedIssue[] memory groupRewards = new ReducedIssue[](size);
-
-        for (uint i = 0; i < size; i++) {
-            uint256 issueNum = issueNums[i];
-            require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
-
-            Issue storage issue = _issues[issueNum];
-            groupRewards[i].issueNum = issueNum;
-            groupRewards[i].size = issue.records.length;
-            groupRewards[i].rewards = issue.rewards;
-
-            uint256[] memory localids =  new uint256[](issue.rewards.length);
-            uint256 baseId = issue.minLotteryNFTId;
-            for (uint j = 0; j < issue.rewards.length; j++) {
-                localids[j] = issue.rewards[j] - baseId + 1;
+    function allHistory(
+        bool isFull
+    ) external view returns (AdvancedRecord[] memory) {
+        uint256 issueNum = _issueCounter.current();
+        uint startIssue = 1;
+        if (isFull) {
+            // get at most 1000 issues of all history
+            if (issueNum > 1000) {
+                startIssue = issueNum - 1000;
             }
-            groupRewards[i].localids = localids;
+        } else {
+            // get latest 3 issues
+            if (issueNum > 3) {
+                startIssue = issueNum - 3;
+            }
+        }
+        AdvancedRecord[] memory groupRewards = new AdvancedRecord[](issueNum - startIssue);
+
+        address user = msg.sender;
+        for (uint i = startIssue; i < issueNum; i++) {
+            uint offset = i - startIssue;
+            Issue storage issue = _issues[i];
+            groupRewards[offset].issueNum = i;
+            groupRewards[offset].size = issue.records.length;
+
+            uint256[] memory rewards = issue.rewards;
+            uint256[] memory localids =  new uint256[](rewards.length);
+            uint256 baseId = issue.minLotteryNFTId;
+            bool[] memory isMyPrizes = new bool[](rewards.length);
+            uint validNum = 0;
+            for (uint j = 0; j < rewards.length; j++) {
+                localids[j] = rewards[j] - baseId;
+                if (_lyLottery.checkOwnership(user, rewards[j])) {
+                    isMyPrizes[j] = true;
+                    validNum++;
+                }
+            }
+            groupRewards[offset].localids = localids;
+
+            // collect prizes by the user
+            if (validNum > 0) {
+                uint256[] memory myPrizeIds = new uint256[](validNum);
+                uint idx = 0;
+                for (uint j = 0; j < isMyPrizes.length; j++) {
+                    if (isMyPrizes[j]) {
+                        myPrizeIds[idx] = localids[j];
+                        idx++;
+                    }
+                }
+                groupRewards[offset].userRewardLocalIds = myPrizeIds;
+            }
+
+            uint256[] memory myTickets = _userAllTickets[i][user];
+            groupRewards[offset].userTickets = myTickets;
+
+            uint myTicketLen = myTickets.length;
+            if (myTicketLen > 0) {
+                uint256[] memory myTicketIds = new uint256[](myTicketLen);
+                for (uint j = 0; j < myTicketLen; j++) {
+                    myTicketIds[j] = myTickets[j] - baseId;
+                }
+                groupRewards[offset].userTicketLocalIds = myTicketIds;
+            }
         }
 
         return groupRewards;
@@ -432,12 +480,14 @@ contract LyIssuer is Ownable {
         uint256 lottorSize = curIssue.records.length;
         require(lottorSize + num < _maxBetNum + 10, "InvalidBetNum");
 
+        uint256[] storage myTickets = _userAllTickets[_issueNum][_user];
         for (uint bn=0; bn < num; bn++) {
             uint256 id = _lyLottery.safeMint(_user);
             curIssue.records.push(Lottery({
                 buyer: _user,
                 nftId: id
             }));
+            myTickets.push(id);
             
             emit Bet(id, _issueNum, recommender);
         }
@@ -483,5 +533,4 @@ contract LyIssuer is Ownable {
         }
         return lotteryNum;
     }
-
 }
