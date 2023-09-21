@@ -25,6 +25,7 @@ contract LyLottor is Ownable {
     mapping(uint256 => uint256) private _distBalance;
     // the cummulative bonus of each distributor
     mapping(uint256 => uint256) private _distCummBonus;
+    mapping(uint256 => uint256) private _updateBlockOfBonus;
     // the tokenids of distributors for each issue
     mapping(uint256 => uint256[]) private _issueDists;
     // the total bonus of all distributors for each issue
@@ -50,6 +51,7 @@ contract LyLottor is Ownable {
         _tokenIdCounter.increment();
         uint256 _tokenId = _tokenIdCounter.current();
         _localIds[_user] = _tokenId;
+        _updateBlockOfBonus[_tokenId] = block.number;
     }
 
     function exists(uint256 tokenId) public view returns (bool) {
@@ -68,9 +70,12 @@ contract LyLottor is Ownable {
         return _distBalance[_tokenId];
     }
 
-    function getCummBonus() public view returns (uint256) {
+    /* get cummulative bonus and the updated block number */
+    function getCummBonus() public view returns (
+        uint256, uint256
+    ) {
         uint256 _tokenId = getTokenId();
-        return _distCummBonus[_tokenId];
+        return (_distCummBonus[_tokenId], _updateBlockOfBonus[_tokenId]);
     }
 
     // the total bonus of all distributors by the issue
@@ -149,6 +154,7 @@ contract LyLottor is Ownable {
             uint256 value = _issueDistRecord[_issueNum][distId];
             _distBalance[distId] += value;
             _distCummBonus[distId] += value;
+            _updateBlockOfBonus[distId] = block.number;
         }
 
         emit PayDistributionBonus(_issueNum, amount);
