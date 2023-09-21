@@ -367,30 +367,48 @@ contract LyIssuer is Ownable {
 
     /* get rewards by issue number */
     function getRewards(
-        uint256 issueNum
-    ) external view returns (uint256, uint256, uint256, uint256[] memory) {
-        require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
+        uint256 requireSize
+    ) external view returns (
+        uint256[] memory, 
+        uint256[] memory, 
+        uint256[] memory
+    ) {
+        require(requireSize <= 10, "RequireAtMost10.");
+        require(requireSize > 0, "InvalidRequireSize.");
 
-        Issue storage issue = _issues[issueNum];
-        return (issueNum, issue.records.length, issue.minLotteryNFTId, issue.rewards);
+        uint256 issueNum = _issueCounter.current();
+        uint startIssue = 1;
+        if (issueNum > requireSize) {
+            startIssue = issueNum - requireSize;
+        }
+
+        uint size = issueNum - startIssue;
+        uint256[] memory nums = new uint256[](size);
+        uint256[] memory sizes = new uint256[](size);
+        uint256[] memory heights = new uint256[](size);
+        for (uint i = startIssue; i < issueNum; i++) {
+            Issue storage issue = _issues[issueNum];
+            uint offset = i - startIssue;
+            nums[offset] = i;
+            sizes[offset] = issue.records.length;
+            heights[offset] = issue.blockNumber;
+        }
+        return (nums, sizes, heights);
     }
 
     function allHistory(
-        bool isFull
+        uint requireSize
     ) external view returns (AdvancedRecord[] memory) {
+        // get at most 1000 issues of all history
+        require(requireSize <= 1000, "RequireAtMost1000.");
+        require(requireSize > 0, "InvalidRequireSize.");
+
         uint256 issueNum = _issueCounter.current();
         uint startIssue = 1;
-        if (isFull) {
-            // get at most 1000 issues of all history
-            if (issueNum > 1000) {
-                startIssue = issueNum - 1000;
-            }
-        } else {
-            // get latest 3 issues
-            if (issueNum > 3) {
-                startIssue = issueNum - 3;
-            }
+        if (issueNum > requireSize) {
+            startIssue = issueNum - requireSize;
         }
+
         AdvancedRecord[] memory groupRewards = new AdvancedRecord[](issueNum - startIssue);
 
         address user = msg.sender;
