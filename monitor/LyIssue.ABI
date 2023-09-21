@@ -2,24 +2,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "recommender",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "num",
-				"type": "uint256"
-			}
-		],
-		"name": "bet",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "address payable",
 				"name": "treasuryAddr",
 				"type": "address"
@@ -69,13 +51,6 @@
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "closeIssue",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -87,13 +62,6 @@
 		],
 		"name": "CloseIssue",
 		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "doLottery",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -153,13 +121,6 @@
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -191,50 +152,6 @@
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "bool",
-				"name": "flag",
-				"type": "bool"
-			}
-		],
-		"name": "setFlagOneAddrOneBet",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint32",
-				"name": "_gasLimit",
-				"type": "uint32"
-			},
-			{
-				"internalType": "uint16",
-				"name": "_confirms",
-				"type": "uint16"
-			}
-		],
-		"name": "setVRFConfg",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"name": "_IssuerPercent",
 		"outputs": [
@@ -250,6 +167,58 @@
 	{
 		"inputs": [],
 		"name": "_LinkTokenAddr",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "_LottorPercent",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "_PunterPercent",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "_TreasuryPercent",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "_VRFV2WrapperAddr",
 		"outputs": [
 			{
 				"internalType": "address",
@@ -288,33 +257,7 @@
 	},
 	{
 		"inputs": [],
-		"name": "_LottorPercent",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
 		"name": "_maxBetNum",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "_PunterPercent",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -378,29 +321,86 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "_TreasuryPercent",
-		"outputs": [
+		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "",
+				"name": "requireSize",
 				"type": "uint256"
+			}
+		],
+		"name": "allHistory",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "issueNum",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "size",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "localids",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "userRewardLocalIds",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "userTickets",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "userTicketLocalIds",
+						"type": "uint256[]"
+					}
+				],
+				"internalType": "struct LyIssuer.AdvancedRecord[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "_VRFV2WrapperAddr",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
+				"internalType": "uint256",
+				"name": "recommender",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "num",
+				"type": "uint256"
 			}
 		],
-		"stateMutability": "view",
+		"name": "bet",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "closeIssue",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "doLottery",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -429,47 +429,6 @@
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256[]",
-				"name": "issueNums",
-				"type": "uint256[]"
-			}
-		],
-		"name": "getBatchRewards",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "uint256",
-						"name": "issueNum",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "size",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256[]",
-						"name": "rewards",
-						"type": "uint256[]"
-					},
-					{
-						"internalType": "uint256[]",
-						"name": "localids",
-						"type": "uint256[]"
-					}
-				],
-				"internalType": "struct LyIssuer.ReducedIssue[]",
-				"name": "",
-				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -633,26 +592,21 @@
 		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "issueNum",
+				"name": "requireSize",
 				"type": "uint256"
 			}
 		],
 		"name": "getRewards",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "uint256[]",
 				"name": "",
-				"type": "uint256"
+				"type": "uint256[]"
 			},
 			{
-				"internalType": "uint256",
+				"internalType": "uint256[]",
 				"name": "",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
+				"type": "uint256[]"
 			},
 			{
 				"internalType": "uint256[]",
@@ -687,6 +641,57 @@
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bool",
+				"name": "flag",
+				"type": "bool"
+			}
+		],
+		"name": "setFlagOneAddrOneBet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint32",
+				"name": "_gasLimit",
+				"type": "uint32"
+			},
+			{
+				"internalType": "uint16",
+				"name": "_confirms",
+				"type": "uint16"
+			}
+		],
+		"name": "setVRFConfg",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]
