@@ -387,7 +387,7 @@ contract LyIssuer is Ownable {
         uint256[] memory sizes = new uint256[](size);
         uint256[] memory heights = new uint256[](size);
         for (uint i = startIssue; i < issueNum; i++) {
-            Issue storage issue = _issues[issueNum];
+            Issue storage issue = _issues[i];
             uint offset = i - startIssue;
             nums[offset] = i;
             sizes[offset] = issue.records.length;
