@@ -200,7 +200,11 @@ contract LyIssuer is Ownable {
         _issueStatus[issueNum] = _STARTED;
 
         Issue storage issue = _issues[issueNum];
-        issue.minLotteryNFTId = _lyLottery.getMaxTokenId();
+        if (issueNum > 1) {
+            issue.minLotteryNFTId = _lyLottery.getMaxTokenId();
+        } else {
+            issue.minLotteryNFTId = 0;
+        }
         issue.blockNumber = block.number;
 
         emit NewIssue(issueNum);
@@ -359,8 +363,6 @@ contract LyIssuer is Ownable {
     function getRecords(
         uint256 issueNum
     ) external onlyOwner view returns (uint256, Lottery[] memory) {
-        require(_issueStatus[issueNum] == _CLOSED, "NotClosed");
-
         Issue storage issue = _issues[issueNum];
         return (issue.minLotteryNFTId, issue.records);
     }
