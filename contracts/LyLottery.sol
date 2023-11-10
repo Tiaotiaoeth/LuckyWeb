@@ -16,6 +16,8 @@ contract LyLottery is ERC721, Ownable {
     address private _admin;
 
     constructor() ERC721("LuckyBet", "LYB") {
+        // token id starts with one
+        _tokenIdCounter.increment();
     }
 
     function setAdmin(address admin) public onlyOwner {
@@ -43,7 +45,7 @@ contract LyLottery is ERC721, Ownable {
 
     // return global token id and local issue lottery id
     function safeMint(address to) public returns (uint256) {
-        require(_admin == msg.sender, "NotAllowed");
+        require(_admin == msg.sender, "NotAllowed|SetAdminFirst");
 
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
