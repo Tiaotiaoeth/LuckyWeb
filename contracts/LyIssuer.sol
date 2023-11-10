@@ -362,7 +362,7 @@ contract LyIssuer is Ownable {
     /* get records by issue number */
     function getRecords(
         uint256 issueNum
-    ) external onlyOwner view returns (uint256, Lottery[] memory) {
+    ) external view returns (uint256, Lottery[] memory) {
         Issue storage issue = _issues[issueNum];
         return (issue.minLotteryNFTId, issue.records);
     }
