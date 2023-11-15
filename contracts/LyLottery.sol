@@ -16,8 +16,6 @@ contract LyLottery is ERC721, Ownable {
     address private _admin;
 
     constructor() ERC721("LuckyBet", "LYB") {
-        // token id starts with one
-        _tokenIdCounter.increment();
     }
 
     function setAdmin(address admin) public onlyOwner {
