@@ -200,11 +200,7 @@ contract LyIssuer is Ownable {
         _issueStatus[issueNum] = _STARTED;
 
         Issue storage issue = _issues[issueNum];
-        if (issueNum > 1) {
-            issue.minLotteryNFTId = _lyLottery.getMaxTokenId();
-        } else {
-            issue.minLotteryNFTId = 0;
-        }
+        issue.minLotteryNFTId = _lyLottery.getMaxTokenId();
         issue.blockNumber = block.number;
 
         emit NewIssue(issueNum);
@@ -362,9 +358,31 @@ contract LyIssuer is Ownable {
     /* get records by issue number */
     function getRecords(
         uint256 issueNum
-    ) external view returns (uint256, Lottery[] memory) {
+    ) external view returns (uint256, uint256[] memory) {
         Issue storage issue = _issues[issueNum];
-        return (issue.minLotteryNFTId, issue.records);
+
+        address user = msg.sender;
+        Lottery[] memory records = issue.records;
+        bool[] memory isUser = new bool[](records.length);
+        uint validNum = 0;
+        for (uint j = 0; j < records.length; j++) {
+            if (user == records[j].buyer) {
+                isUser[j] = true;
+                validNum++;
+            }
+        }
+        
+        uint256 baseId = issue.minLotteryNFTId;
+        uint256[] memory myTickets =  new uint256[](validNum);
+        uint idx = 0;
+        for (uint j = 0; j < isUser.length; j++) {
+            if (isUser[j]) {
+                myTickets[idx] = records[j].nftId - baseId + 1;
+                idx++;
+            }
+        }
+
+        return (baseId, myTickets);
     }
 
     /* get rewards by issue number */
@@ -426,7 +444,7 @@ contract LyIssuer is Ownable {
             bool[] memory isMyPrizes = new bool[](rewards.length);
             uint validNum = 0;
             for (uint j = 0; j < rewards.length; j++) {
-                localids[j] = rewards[j] - baseId;
+                localids[j] = rewards[j] - baseId + 1;
                 if (_lyLottery.checkOwnership(user, rewards[j])) {
                     isMyPrizes[j] = true;
                     validNum++;
@@ -454,7 +472,7 @@ contract LyIssuer is Ownable {
             if (myTicketLen > 0) {
                 uint256[] memory myTicketIds = new uint256[](myTicketLen);
                 for (uint j = 0; j < myTicketLen; j++) {
-                    myTicketIds[j] = myTickets[j] - baseId;
+                    myTicketIds[j] = myTickets[j] - baseId + 1;
                 }
                 groupRewards[offset].userTicketLocalIds = myTicketIds;
             }
