@@ -568,21 +568,9 @@
 				"type": "uint256"
 			},
 			{
-				"components": [
-					{
-						"internalType": "address",
-						"name": "buyer",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "nftId",
-						"type": "uint256"
-					}
-				],
-				"internalType": "struct LyIssuer.Lottery[]",
+				"internalType": "uint256[]",
 				"name": "",
-				"type": "tuple[]"
+				"type": "uint256[]"
 			}
 		],
 		"stateMutability": "view",
