@@ -1,0 +1,120 @@
+@tailwind base;
+
+
+a {
+  @apply text-blue-700;
+}
+
+
+@tailwind components;
+
+@tailwind utilities;
+
+
+
+
+html{
+  font-family: var(--font-poppins);
+}
+.content p {
+  @apply my-6;
+}
+
+.content ul {
+  @apply my-6;
+}
+
+#__next {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.animated-text-fg {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+input[type="number"]{
+    -moz-appearance: textfield;
+}
+
+
+.gradient-border {
+  background: linear-gradient(to right, red, blue); /* Your desired gradient */
+  -webkit-background-clip: text;
+  background-clip: text;
+  border: 2px solid transparent; /* Adjust border width as needed */
+  padding: 0.5rem; /* Adjust padding as needed */
+}
+
+
+
+
+.side-menu-li.active{
+  background: linear-gradient(137deg, #FE1C74 0%, #E76450 100%), var(--222, #5A40F6);
+  box-shadow: 0px 0px 20px 0px rgba(252, 37, 112, 0.80);
+  color:#fff;
+
+}
+
+.side-menu-li.active svg{
+    fill:#fff;
+  }
+/* .gradient-sb{
+  background: linear-gradient(300deg,#000000 0% , #8A7B80D9 15%, #6A69C2 50%, #292AB8E5 75%, #822946 100%);
+
+}
+.gradient-sb:hover{
+  background: linear-gradient(300deg,#000000 0% , #DA7092D9 15%, #5351F9 50%, #1112F8E5 75%, #E12461 100%);
+}
+.gradient-sb:pressed{
+  background: linear-gradient(300deg,#000000 0% , #8A7B80D9 15%, #6A69C2 50%, #292AB8E5 75%, #822946 100%);
+} */
+
+
+/* .btn-rounded:hover{
+  box-shadow: 0px 0px 20px 0px rgba(235, 89, 87, 0.60);
+}
+
+.btn-rounded:pressed{
+opacity: 0.6;} */
+
+.bg-image{
+  background-image:url(../../public/assets/images/BG01.jpg);
+  background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.bg-image-2{
+  background-image:url(../../public/assets/images/BG02.jpg);
+  background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.bg-image-3{
+  background-image:url(../../public/assets/images/BG03.jpg);
+  background-size: cover;
+    background-repeat: no-repeat;
+}
+.sb-bg{
+  background-image:url(../../public/assets/images/Vector.svg);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.upcoming-bg{
+  background-image:url(../../public/assets/images/upcoming.svg);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+
