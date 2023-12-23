@@ -1,6 +1,11 @@
-export const wagmiAbi = [
+export const LyLotteryAbi = [
   {
     inputs: [
+      {
+        internalType: 'address payable',
+        name: 'treasuryAddr',
+        type: 'address',
+      },
       {
         internalType: 'address payable',
         name: 'issuerAddr',
@@ -13,7 +18,7 @@ export const wagmiAbi = [
       },
       {
         internalType: 'address',
-        name: 'punterAddr',
+        name: 'lyLotteryAddr',
         type: 'address',
       },
     ],
@@ -56,25 +61,6 @@ export const wagmiAbi = [
       },
     ],
     name: 'CloseIssue',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: '_issueNum',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'retry',
-        type: 'uint256',
-      },
-    ],
-    name: 'DuplicateRandom',
     type: 'event',
   },
   {
@@ -180,6 +166,19 @@ export const wagmiAbi = [
   },
   {
     inputs: [],
+    name: '_LinkTokenAddr',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: '_LottorPercent',
     outputs: [
       {
@@ -212,6 +211,19 @@ export const wagmiAbi = [
         internalType: 'uint256',
         name: '',
         type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: '_VRFV2WrapperAddr',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
       },
     ],
     stateMutability: 'view',
@@ -261,9 +273,9 @@ export const wagmiAbi = [
     name: '_secondRewardNum',
     outputs: [
       {
-        internalType: 'uint256',
+        internalType: 'uint32',
         name: '',
-        type: 'uint256',
+        type: 'uint32',
       },
     ],
     stateMutability: 'view',
@@ -274,9 +286,9 @@ export const wagmiAbi = [
     name: '_topRewardNum',
     outputs: [
       {
-        internalType: 'uint256',
+        internalType: 'uint32',
         name: '',
-        type: 'uint256',
+        type: 'uint32',
       },
     ],
     stateMutability: 'view',
@@ -335,6 +347,13 @@ export const wagmiAbi = [
   },
   {
     inputs: [],
+    name: 'doLottery',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'getBalance',
     outputs: [
       {
@@ -355,6 +374,66 @@ export const wagmiAbi = [
         name: '',
         type: 'uint256',
       },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256[]',
+        name: 'issueNums',
+        type: 'uint256[]',
+      },
+    ],
+    name: 'getBatchRewards',
+    outputs: [
+      {
+        components: [
+          {
+            internalType: 'uint256',
+            name: 'issueNum',
+            type: 'uint256',
+          },
+          {
+            internalType: 'uint256',
+            name: 'size',
+            type: 'uint256',
+          },
+          {
+            internalType: 'uint256[]',
+            name: 'rewards',
+            type: 'uint256[]',
+          },
+          {
+            internalType: 'uint256[]',
+            name: 'localids',
+            type: 'uint256[]',
+          },
+        ],
+        internalType: 'struct LyIssuer.ReducedIssue[]',
+        name: '',
+        type: 'tuple[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'issueNum',
+        type: 'uint256',
+      },
+    ],
+    name: 'getIssueBaseNftId',
+    outputs: [
       {
         internalType: 'uint256',
         name: '',
@@ -400,9 +479,38 @@ export const wagmiAbi = [
         type: 'uint256',
       },
       {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
         internalType: 'uint256[]',
         name: '',
         type: 'uint256[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'issueNum',
+        type: 'uint256',
+      },
+    ],
+    name: 'getLotteryNum',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
       },
     ],
     stateMutability: 'view',
@@ -437,43 +545,28 @@ export const wagmiAbi = [
   {
     inputs: [
       {
-        internalType: 'address',
-        name: '_user',
-        type: 'address',
+        internalType: 'uint256',
+        name: 'issueNum',
+        type: 'uint256',
       },
     ],
-    name: 'getPrizesByUser',
+    name: 'getRecords',
     outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
       {
         components: [
           {
             internalType: 'address',
-            name: 'winner',
+            name: 'buyer',
             type: 'address',
           },
           {
             internalType: 'uint256',
-            name: 'issueNum',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'rewardLevel',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'rewardValue',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
             name: 'nftId',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'lotteryId',
             type: 'uint256',
           },
         ],
@@ -496,9 +589,37 @@ export const wagmiAbi = [
     name: 'getRewards',
     outputs: [
       {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
         internalType: 'uint256[]',
         name: '',
         type: 'uint256[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getVRFV2Addr',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
       },
     ],
     stateMutability: 'view',
@@ -520,6 +641,37 @@ export const wagmiAbi = [
   {
     inputs: [],
     name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bool',
+        name: 'flag',
+        type: 'bool',
+      },
+    ],
+    name: 'setFlagOneAddrOneBet',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint32',
+        name: '_gasLimit',
+        type: 'uint32',
+      },
+      {
+        internalType: 'uint16',
+        name: '_confirms',
+        type: 'uint16',
+      },
+    ],
+    name: 'setVRFConfg',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
