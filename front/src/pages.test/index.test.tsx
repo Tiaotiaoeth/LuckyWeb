@@ -1,18 +1,20 @@
 import { render, screen } from '@testing-library/react';
 
-import About from '@/pages/about';
+import Index from '@/pages/index';
 
 // The easiest solution to mock `next/router`: https://github.com/vercel/next.js/issues/7479
 // The mock has been moved to `__mocks__` folder to avoid duplication
 
-describe('About page', () => {
+describe('Index page', () => {
   describe('Render method', () => {
-    it('should have two paragraphs of `Lorem ipsum`', () => {
-      render(<About />);
+    it('should have h1 tag', () => {
+      render(<Index />);
 
-      const paragraph = screen.getAllByText(/Lorem ipsum/);
+      const heading = screen.getByRole('heading', {
+        name: /Lucky Bet {2}code/,
+      });
 
-      expect(paragraph).toHaveLength(2);
+      expect(heading).toBeInTheDocument();
     });
   });
 });
