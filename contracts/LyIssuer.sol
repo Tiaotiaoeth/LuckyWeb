@@ -49,9 +49,12 @@ contract LyIssuer is Ownable {
     uint256 constant public _TreasuryPercent = 6;
     uint256 constant public _IssuerPercent = 4;
 
+    // chainlink configuration, this is for Arbitrum mainnet
+    address constant public _LinkTokenAddr = 0xf97f4df75117a78c1A5a0DBb814Af92458539FB4;
+    address constant public _VRFV2WrapperAddr = 0x2D159AE3bFf04a10A355B608D22BDEC092e934fa;
     // chainlink configuration, this is for Arbitrum Georli Testnet
-    address constant public _LinkTokenAddr = 0xd14838A68E8AFBAdE5efb411d5871ea0011AFd28;
-    address constant public _VRFV2WrapperAddr = 0x674Cda1Fef7b3aA28c535693D658B42424bb7dBD;
+    // address constant public _LinkTokenAddr = 0xd14838A68E8AFBAdE5efb411d5871ea0011AFd28;
+    // address constant public _VRFV2WrapperAddr = 0x674Cda1Fef7b3aA28c535693D658B42424bb7dBD;
     uint32 private _VRFCallbackGasLimit = 400000;
     uint16 private _VRFRequestConfirmations = 3;
 
