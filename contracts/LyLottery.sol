@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts@4.0.0/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts@4.0.0/access/Ownable.sol";
+import "@openzeppelin/contracts@4.0.0/utils/Counters.sol";
 
 contract LyLottery is ERC721, Ownable {
 
@@ -31,14 +30,8 @@ contract LyLottery is ERC721, Ownable {
         return ERC721.balanceOf(owner);
     }
 
-    function ownerOf(uint256 tokenId) public view override returns (address) {
-        address theOwner = _ownerOf(tokenId);
-        require(theOwner != address(0), "ERC721: invalid token ID");
-        return theOwner;
-    }
-
     function checkOwnership(address owner, uint256 tokenId) public view returns (bool) {
-        return _ownerOf(tokenId) == owner;
+        return ownerOf(tokenId) == owner;
     }
 
     // return global token id and local issue lottery id
