@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts@4.0.0/access/Ownable.sol";
 import "./LyLottery.sol";
 
 contract LyPunter is Ownable {
